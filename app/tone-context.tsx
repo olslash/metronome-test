@@ -1,6 +1,5 @@
 import React from "react";
 import * as Tone from "tone";
-import { program, Program } from "./example-program";
 import { useLoop } from "./use-loop";
 import { useOscillator } from "./use-oscillator";
 import { isServer } from "./utils";
@@ -10,11 +9,6 @@ interface State {
   running: boolean;
   eighthActive: boolean;
   quarterActive: boolean;
-  activeProgram?: Program;
-}
-
-interface Methods {
-  startProgram: (program: Program) => void;
 }
 
 const initialState: State = {
@@ -22,16 +16,12 @@ const initialState: State = {
   running: false,
   eighthActive: true,
   quarterActive: true,
-  activeProgram: undefined,
 };
 
-const initialMethods = {
-  startProgram: () => {},
-};
-
-const stateContext = React.createContext<
-  [State & Methods, React.Dispatch<Action>]
->([{ ...initialState, ...initialMethods }, () => {}]);
+const stateContext = React.createContext<[State, React.Dispatch<Action>]>([
+  initialState,
+  () => {},
+]);
 
 export const useState = () => React.useContext(stateContext);
 
@@ -41,8 +31,8 @@ type Action =
   | { type: "toggleQuarter" }
   | { type: "toggleEighth" }
   | { type: "stop" }
-  | { type: "setBPM"; value: number }
-  | { type: "startProgram"; program: Program };
+  | { type: "setBPM"; value: number };
+// | { type: "startProgram"; program: Program };
 
 function reducer(state: State, action: Action) {
   switch (action.type) {
@@ -60,9 +50,6 @@ function reducer(state: State, action: Action) {
 
     case "toggleEighth":
       return { ...state, eighthActive: !state.eighthActive };
-
-    case "startProgram":
-      return { ...state, program: action.program };
   }
 }
 
@@ -115,12 +102,8 @@ export const ToneContext: React.FC<{}> = ({ children }) => {
     }
   }, [state.running]);
 
-  const methods = {
-    startProgram: (program: Program) => {},
-  };
-
   return (
-    <stateContext.Provider value={[{ ...state, ...methods }, dispatch]}>
+    <stateContext.Provider value={[state, dispatch]}>
       {children}
     </stateContext.Provider>
   );
